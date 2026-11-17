@@ -8,6 +8,9 @@ from .config import get_settings
 from .db import make_pool
 from .routes import router
 from .dashboard import router as dashboard_router
+from .departments import router as departments_router
+from .alert_engine import router as alert_router
+from .investigations import router as investigations_router
 
 
 @asynccontextmanager
@@ -26,10 +29,13 @@ async def lifespan(app: FastAPI):
         if app.state.pool is not None: app.state.pool.close()
 
 
-app = FastAPI(title='ILIP - API de lecture', version='0.1.0', lifespan=lifespan,
+app = FastAPI(title='ILIP - API locale', version='0.9.0', lifespan=lifespan,
               description='Développement local. Données lues depuis Neon, sans création ni import automatique.')
 app.include_router(router)
 app.include_router(dashboard_router)
+app.include_router(departments_router)
+app.include_router(alert_router)
+app.include_router(investigations_router)
 
 
 @app.exception_handler(Error)
