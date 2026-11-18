@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {ratio,supplierRate,stockValue,metrics,validateOverview,number} from '../src/dashboardData.js';
+const fixture={start_date:'2025-01-01',end_date:'2025-12-31',coverage:{first_date:'2025-01-01',last_date:'2025-12-31'},production_unit:'EA',monthly:[],summary:{stock_date:'2025-12-31',stock_value_eur:'1234.50',missing_cost_items:0,otif_lines:8,due_customer_lines:10,due_supplier_lines:20,late_supplier_lines:5,completed_qty:'80',planned_qty:'100',below_safety_items:2,overstock_items:3,open_purchase_orders:4,late_completed_orders:6,overdue_unfinished_orders:7}};
+test('API values drive all eight cards',()=>{const cards=metrics(fixture);assert.equal(cards.length,8);assert.equal(cards[0][2],'80 %');assert.equal(cards[1][2],'80 %');assert.equal(cards[2][2],'75 %');assert.equal(cards[4][2],'2');assert.equal(cards[5][2],'3');assert.equal(cards[6][2],'4');assert.equal(cards[7][2],'6');assert.match(cards[7][3],/7 autres/);const changed=structuredClone(fixture);changed.summary.otif_lines=1;assert.equal(metrics(changed)[0][2],'10 %');});
+test('global ratio is weighted, not a mean of monthly percentages',()=>{assert.equal(ratio(1+90,1+100),91/101*100);assert.notEqual(ratio(91,101),95)});
+test('no activity never becomes a false zero-percent rate',()=>{assert.equal(ratio(0,0),null);assert.equal(supplierRate({due_supplier_lines:0,late_supplier_lines:0}),null)});
+test('missing numerator and mixed production units remain unavailable',()=>{assert.equal(ratio(null,100),null);const d=structuredClone(fixture);d.summary.completed_qty=null;d.summary.planned_qty=null;assert.equal(metrics(d)[1][2],'Non applicable')});
+test('unknown and invalid numbers are not coerced to zero',()=>{for(const v of [null,undefined,'','bad',Infinity])assert.equal(number(v),null);assert.equal(number('0.000'),0)});
+test('missing stock costs suppress partial valuation',()=>{assert.equal(stockValue({...fixture.summary,missing_cost_items:1}),null);assert.equal(stockValue({...fixture.summary,stock_date:null}),null);assert.equal(stockValue(fixture.summary),1234.5)});
+test('supplier completeness uses due minus missed lines',()=>{assert.equal(supplierRate(fixture.summary),75);assert.equal(supplierRate({due_supplier_lines:10}),null)});
+test('contract rejects missing dates, coverage or summary',()=>{assert.equal(validateOverview(fixture),fixture);assert.throws(()=>validateOverview({monthly:[]}));assert.throws(()=>validateOverview({...fixture,coverage:null}))});

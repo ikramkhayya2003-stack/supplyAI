@@ -38,6 +38,8 @@ function App(){
 }
 function DataPage({spec,refresh}){
  const [draft,setDraft]=useState({}),[filters,setFilters]=useState({}),[offset,setOffset]=useState(0),[limit,setLimit]=useState(25),[result,setResult]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[detail,setDetail]=useState(null);
+ useEffect(()=>{if(spec.path!=='/items')return;try{const q=sessionStorage.getItem('ilip.items.search');sessionStorage.removeItem('ilip.items.search');if(q?.trim()){setDraft({q:q.trim().slice(0,100)});setFilters({q:q.trim().slice(0,100)});setOffset(0);}}catch{}},[spec.path]);
+ useEffect(()=>{try{const raw=sessionStorage.getItem('ilip.factory.filter');if(!raw)return;const p=JSON.parse(raw);if(p.path!==spec.path)return;sessionStorage.removeItem('ilip.factory.filter');const allowed=new Set(spec.filters.map(x=>x[0]));const f=Object.fromEntries(Object.entries(p.filters||{}).filter(([k,v])=>allowed.has(k)&&typeof v==='string'));setDraft(f);setFilters(f);setOffset(0);}catch{}},[spec.path]);
  useEffect(()=>{const c=new AbortController();setLoading(true);setError('');setResult(null);setDetail(null);
  const timeout=setTimeout(()=>c.abort('timeout'),15000);
  request(spec.path,{...filters,offset,limit},c.signal).then(d=>{if(!Array.isArray(d.data)||!Number.isInteger(d.total))throw Error('Réponse API inattendue.');setResult(d)}).catch(e=>{if(c.signal.reason!=='unmount')setError(c.signal.aborted?'Délai dépassé. Vérifie FastAPI puis actualise.':e.message)}).finally(()=>{if(c.signal.reason!=='unmount')setLoading(false)});

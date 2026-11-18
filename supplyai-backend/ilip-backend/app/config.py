@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
     database_url: SecretStr = SecretStr('')
     ilip_enable_alert_writes: bool = False
+    openai_api_key: SecretStr = SecretStr('')
+    ilip_ai_model: str = ''
 
 
 @lru_cache

@@ -11,6 +11,10 @@ from .dashboard import router as dashboard_router
 from .departments import router as departments_router
 from .alert_engine import router as alert_router
 from .investigations import router as investigations_router
+from .assistant import router as assistant_router
+from .executive_kpis import router as executive_kpi_router
+from .factory import router as factory_router
+from .stations import router as stations_router
 
 
 @asynccontextmanager
@@ -36,6 +40,10 @@ app.include_router(dashboard_router)
 app.include_router(departments_router)
 app.include_router(alert_router)
 app.include_router(investigations_router)
+app.include_router(assistant_router)
+app.include_router(executive_kpi_router)
+app.include_router(factory_router)
+app.include_router(stations_router)
 
 
 @app.exception_handler(Error)
